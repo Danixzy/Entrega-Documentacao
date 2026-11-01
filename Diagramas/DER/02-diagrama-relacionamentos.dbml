@@ -1,0 +1,523 @@
+// =====================================================================
+//  CromoCard - Sistema de Gestao de Cartas Colecionaveis
+//  2/3 - DIAGRAMA DE RELACIONAMENTOS (entidades + cardinalidades)
+//  Cole em https://dbdiagram.io/d
+//  Somente as chaves (PK/FK) sao exibidas: as caixas ficam pequenas
+//  e as linhas de relacionamento ficam legiveis para print.
+//  Os atributos completos estao no arquivo 01.
+//  Notacao dbdiagram:  >  muitos-para-um   |   -  um-para-um
+// =====================================================================
+
+Project CromoCard_Relacionamentos {
+  database_type: 'PostgreSQL'
+  Note: 'Diagrama de relacionamentos: 50 entidades e suas cardinalidades. Apenas chaves primarias e estrangeiras.'
+}
+
+// =====================================================================
+// MODULO 1 - USUARIOS, PERFIL E ACESSO
+// =====================================================================
+Table users [headercolor: #3E5F8A] {
+  id uuid [pk]
+}
+
+Table profiles [headercolor: #3E5F8A] {
+  id      uuid [pk]
+  user_id uuid [not null, unique]
+}
+
+Table addresses [headercolor: #3E5F8A] {
+  id      uuid [pk]
+  user_id uuid [not null]
+}
+
+Table password_reset_tokens [headercolor: #3E5F8A] {
+  id      uuid [pk]
+  user_id uuid [not null]
+}
+
+Table refresh_tokens [headercolor: #3E5F8A] {
+  id      uuid [pk]
+  user_id uuid [not null]
+}
+
+Table achievements [headercolor: #3E5F8A] {
+  id uuid [pk]
+}
+
+Table user_achievements [headercolor: #3E5F8A] {
+  user_id        uuid [not null]
+  achievement_id uuid [not null]
+  indexes {
+    (user_id, achievement_id) [pk]
+  }
+}
+
+Table subscriptions [headercolor: #3E5F8A] {
+  id      uuid [pk]
+  user_id uuid [not null]
+}
+
+// =====================================================================
+// MODULO 2 - CATALOGO GLOBAL
+// =====================================================================
+Table categories [headercolor: #2E7D5B] {
+  id                 uuid [pk]
+  parent_category_id uuid
+}
+
+Table rarities [headercolor: #2E7D5B] {
+  id uuid [pk]
+}
+
+Table languages [headercolor: #2E7D5B] {
+  id uuid [pk]
+}
+
+Table card_conditions [headercolor: #2E7D5B] {
+  id uuid [pk]
+}
+
+Table albums [headercolor: #2E7D5B] {
+  id          uuid [pk]
+  category_id uuid
+}
+
+Table cards [headercolor: #2E7D5B] {
+  id          uuid [pk]
+  album_id    uuid
+  category_id uuid
+  rarity_id   uuid
+  language_id uuid
+}
+
+Table card_photos [headercolor: #2E7D5B] {
+  id      uuid [pk]
+  card_id uuid [not null]
+}
+
+Table price_history [headercolor: #2E7D5B] {
+  id      uuid [pk]
+  card_id uuid [not null]
+}
+
+// =====================================================================
+// MODULO 3 - COLECAO DO CLIENTE
+// =====================================================================
+Table collections [headercolor: #7B4F9D] {
+  id      uuid [pk]
+  user_id uuid [not null, unique]
+}
+
+Table user_albums [headercolor: #7B4F9D] {
+  id            uuid [pk]
+  collection_id uuid [not null]
+  album_id      uuid [not null]
+}
+
+Table collection_cards [headercolor: #7B4F9D] {
+  id            uuid [pk]
+  collection_id uuid [not null]
+  card_id       uuid [not null]
+}
+
+// =====================================================================
+// MODULO 4 - COMUNIDADE (GRUPOS)
+// =====================================================================
+Table groups [headercolor: #C2703D] {
+  id         uuid [pk]
+  creator_id uuid [not null]
+}
+
+Table group_members [headercolor: #C2703D] {
+  id       uuid [pk]
+  group_id uuid [not null]
+  user_id  uuid [not null]
+}
+
+Table group_join_requests [headercolor: #C2703D] {
+  id             uuid [pk]
+  group_id       uuid [not null]
+  user_id        uuid [not null]
+  reviewed_by_id uuid
+}
+
+Table group_messages [headercolor: #C2703D] {
+  id          uuid [pk]
+  group_id    uuid [not null]
+  author_id   uuid [not null]
+  reply_to_id uuid
+  card_id     uuid
+  listing_id  uuid
+}
+
+Table polls [headercolor: #C2703D] {
+  id               uuid [pk]
+  group_message_id uuid [not null, unique]
+}
+
+Table poll_options [headercolor: #C2703D] {
+  id      uuid [pk]
+  poll_id uuid [not null]
+}
+
+Table poll_votes [headercolor: #C2703D] {
+  poll_option_id uuid [not null]
+  user_id        uuid [not null]
+  indexes {
+    (poll_option_id, user_id) [pk]
+  }
+}
+
+// =====================================================================
+// MODULO 5 - CHAT PESSOAL
+// =====================================================================
+Table conversations [headercolor: #2A7B8C] {
+  id         uuid [pk]
+  listing_id uuid
+}
+
+Table conversation_participants [headercolor: #2A7B8C] {
+  conversation_id uuid [not null]
+  user_id         uuid [not null]
+  indexes {
+    (conversation_id, user_id) [pk]
+  }
+}
+
+Table messages [headercolor: #2A7B8C] {
+  id              uuid [pk]
+  conversation_id uuid [not null]
+  author_id       uuid [not null]
+  reply_to_id     uuid
+}
+
+Table user_blocks [headercolor: #2A7B8C] {
+  id         uuid [pk]
+  blocker_id uuid [not null]
+  blocked_id uuid [not null]
+}
+
+// =====================================================================
+// MODULO 6 - MARKETPLACE
+// =====================================================================
+Table listings [headercolor: #A63D5F] {
+  id           uuid [pk]
+  seller_id    uuid [not null]
+  card_id      uuid [not null]
+  condition_id uuid
+}
+
+Table listing_photos [headercolor: #A63D5F] {
+  id         uuid [pk]
+  listing_id uuid [not null]
+}
+
+Table offers [headercolor: #A63D5F] {
+  id         uuid [pk]
+  listing_id uuid [not null]
+  buyer_id   uuid [not null]
+}
+
+Table orders [headercolor: #A63D5F] {
+  id                  uuid [pk]
+  listing_id          uuid [not null]
+  buyer_id            uuid [not null]
+  seller_id           uuid [not null]
+  shipping_address_id uuid [not null]
+}
+
+Table payments [headercolor: #A63D5F] {
+  id       uuid [pk]
+  order_id uuid [not null, unique]
+}
+
+Table reviews [headercolor: #A63D5F] {
+  id        uuid [pk]
+  order_id  uuid [not null, unique]
+  author_id uuid [not null]
+  seller_id uuid [not null]
+}
+
+// =====================================================================
+// MODULO 7 - NOTIFICACOES E FAVORITOS
+// =====================================================================
+Table favorites [headercolor: #B08A2E] {
+  id       uuid [pk]
+  user_id  uuid [not null]
+  album_id uuid
+  card_id  uuid
+  group_id uuid
+}
+
+Table price_alerts [headercolor: #B08A2E] {
+  id      uuid [pk]
+  user_id uuid [not null]
+  card_id uuid [not null]
+}
+
+Table global_notifications [headercolor: #B08A2E] {
+  id       uuid [pk]
+  admin_id uuid [not null]
+}
+
+Table notifications [headercolor: #B08A2E] {
+  id                     uuid [pk]
+  user_id                uuid [not null]
+  global_notification_id uuid
+}
+
+// =====================================================================
+// MODULO 8 - MODERACAO E ADMINISTRACAO
+// =====================================================================
+Table reports [headercolor: #5A5A66] {
+  id               uuid [pk]
+  reporter_id      uuid [not null]
+  moderator_id     uuid
+  listing_id       uuid
+  target_user_id   uuid
+  group_message_id uuid
+}
+
+Table catalog_requests [headercolor: #5A5A66] {
+  id             uuid [pk]
+  requester_id   uuid [not null]
+  reviewed_by_id uuid
+  card_id        uuid
+  album_id       uuid
+}
+
+Table audit_logs [headercolor: #5A5A66] {
+  id       uuid [pk]
+  admin_id uuid [not null]
+}
+
+Table global_settings [headercolor: #5A5A66] {
+  id            uuid [pk]
+  updated_by_id uuid
+}
+
+Table seller_verifications [headercolor: #5A5A66] {
+  id                      uuid [pk]
+  user_id                 uuid [not null]
+  reviewed_by_id          uuid
+  address_id              uuid
+}
+
+Table seller_documents [headercolor: #5A5A66] {
+  id                     uuid [pk]
+  seller_verification_id uuid [not null]
+  validated_by_id        uuid
+}
+
+Table seller_verification_notes [headercolor: #5A5A66] {
+  id                     uuid [pk]
+  seller_verification_id uuid [not null]
+  author_id              uuid [not null]
+}
+
+Table user_warnings [headercolor: #5A5A66] {
+  id         uuid [pk]
+  user_id    uuid [not null]
+  admin_id   uuid [not null]
+  report_id  uuid
+}
+
+Table catalog_request_votes [headercolor: #5A5A66] {
+  catalog_request_id uuid [not null]
+  user_id            uuid [not null]
+  indexes {
+    (catalog_request_id, user_id) [pk]
+  }
+}
+
+Table report_exports [headercolor: #5A5A66] {
+  id          uuid [pk]
+  admin_id    uuid [not null]
+}
+
+// =====================================================================
+// RELACIONAMENTOS
+// =====================================================================
+
+// --- 1. Usuarios, Perfil e Acesso ------------------------------------
+Ref: profiles.user_id                  - users.id    // 1 : 1  possui
+Ref: addresses.user_id                > users.id    // 1 : N  cadastra
+Ref: password_reset_tokens.user_id > users.id    // 1 : N  solicita
+Ref: refresh_tokens.user_id        > users.id    // 1 : N  mantem sessoes
+Ref: user_achievements.user_id       > users.id    // 1 : N  desbloqueia
+Ref: user_achievements.achievement_id     > achievements.id  // 1 : N  concedida em
+Ref: subscriptions.user_id              > users.id    // 1 : N  assina
+
+// --- 2. Catalogo Global ----------------------------------------------
+Ref: categories.parent_category_id > categories.id  // auto-relacionamento
+Ref: albums.category_id         > categories.id  // 1 : N  classifica
+Ref: cards.album_id             > albums.id      // 1 : N  contem
+Ref: cards.category_id         > categories.id  // 1 : N  classifica
+Ref: cards.rarity_id          > rarities.id   // 1 : N  define
+Ref: cards.language_id            > languages.id     // 1 : N  define
+Ref: card_photos.card_id        > cards.id      // 1 : N  ilustrada por
+Ref: price_history.card_id   > cards.id      // 1 : N  registra
+
+// --- 3. Colecao do Cliente -------------------------------------------
+Ref: collections.user_id         - users.id  // 1 : 1  mantem
+Ref: user_albums.collection_id   > collections.id  // 1 : N  acompanha
+Ref: user_albums.album_id     > albums.id    // 1 : N  acompanhado em
+Ref: collection_cards.collection_id   > collections.id  // 1 : N  registra
+Ref: collection_cards.card_id     > cards.id    // 1 : N  aparece em
+
+// --- 4. Comunidade (Grupos) ------------------------------------------
+Ref: groups.creator_id                     > users.id        // cria
+Ref: group_members.group_id                > groups.id          // tem
+Ref: group_members.user_id              > users.id        // participa
+Ref: group_join_requests.group_id           > groups.id          // recebe
+Ref: group_join_requests.user_id         > users.id        // envia
+Ref: group_join_requests.reviewed_by_id    > users.id        // avalia
+Ref: group_messages.group_id              > groups.id          // hospeda
+Ref: group_messages.author_id              > users.id        // is_public
+Ref: group_messages.reply_to_id > group_messages.id // responde
+Ref: group_messages.card_id              > cards.id          // compartilhada
+Ref: group_messages.listing_id            > listings.id        // compartilhado
+Ref: polls.group_message_id            - group_messages.id // contem (1:1)
+Ref: poll_options.poll_id             > polls.id        // oferece
+Ref: poll_votes.poll_option_id        > poll_options.id  // recebe
+Ref: poll_votes.user_id              > users.id        // vota
+
+// --- 5. Chat Pessoal --------------------------------------------------
+Ref: conversation_participants.conversation_id > conversations.id  // reune
+Ref: conversation_participants.user_id  > users.id   // participa
+Ref: messages.conversation_id              > conversations.id  // contem
+Ref: messages.author_id                 > users.id   // envia
+Ref: messages.reply_to_id   > messages.id  // responde
+Ref: conversations.listing_id               > listings.id   // origina
+Ref: user_blocks.blocker_id    > users.id   // bloqueia
+Ref: user_blocks.blocked_id     > users.id   // e bloqueado
+
+// --- 6. Marketplace ---------------------------------------------------
+Ref: listings.seller_id           > users.id            // anuncia
+Ref: listings.card_id              > cards.id              // ofertada em
+Ref: listings.condition_id > card_conditions.id // descreve
+Ref: listing_photos.listing_id       > listings.id            // exibe
+Ref: offers.listing_id           > listings.id            // recebe
+Ref: offers.buyer_id         > users.id            // propoe
+Ref: orders.listing_id             > listings.id            // gera
+Ref: orders.buyer_id           > users.id            // compra
+Ref: orders.seller_id            > users.id            // vende
+Ref: orders.shipping_address_id    > addresses.id           // entregue em
+Ref: payments.order_id           - orders.id             // quitado por (1:1)
+Ref: reviews.order_id           - orders.id             // avaliado por (1:1)
+Ref: reviews.author_id            > users.id            // escreve
+Ref: reviews.seller_id         > users.id            // recebe
+
+// --- 7. Notificacoes e Favoritos --------------------------------------
+Ref: favorites.user_id                > users.id            // favorita
+Ref: favorites.album_id                  > albums.id              // alvo
+Ref: favorites.card_id                  > cards.id              // alvo
+Ref: favorites.group_id                  > groups.id              // alvo
+Ref: price_alerts.user_id            > users.id            // configura
+Ref: price_alerts.card_id              > cards.id              // monitorada
+Ref: notifications.user_id             > users.id            // recebe
+Ref: notifications.global_notification_id  > global_notifications.id // expande em
+Ref: global_notifications.admin_id        > users.id            // dispara
+
+// --- 8. Moderacao e Administracao -------------------------------------
+Ref: reports.reporter_id             > users.id        // reports
+Ref: reports.moderator_id               > users.id        // modera
+Ref: reports.listing_id                 > listings.id        // alvo
+Ref: reports.target_user_id            > users.id        // alvo
+Ref: reports.group_message_id          > group_messages.id // alvo
+Ref: catalog_requests.requester_id  > users.id       // solicita
+Ref: catalog_requests.reviewed_by_id > users.id       // aprova
+Ref: catalog_requests.card_id        > cards.id         // resulta em
+Ref: catalog_requests.album_id        > albums.id         // resulta em
+Ref: audit_logs.admin_id               > users.id       // produz
+Ref: global_settings.updated_by_id > users.id      // atualiza
+Ref: seller_verifications.user_id - users.id      // credencia
+Ref: seller_verifications.reviewed_by_id > users.id      // avalia
+Ref: seller_verifications.address_id > addresses.id      // endereco comercial
+Ref: seller_documents.seller_verification_id > seller_verifications.id      // anexa
+Ref: seller_documents.validated_by_id > users.id      // valida
+Ref: seller_verification_notes.seller_verification_id > seller_verifications.id      // anota
+Ref: seller_verification_notes.author_id > users.id      // escreve
+Ref: user_warnings.user_id > users.id      // recebe
+Ref: user_warnings.admin_id > users.id      // aplica
+Ref: user_warnings.report_id > reports.id      // origina
+Ref: catalog_request_votes.catalog_request_id > catalog_requests.id      // recebe voto
+Ref: catalog_request_votes.user_id > users.id      // vota
+Ref: report_exports.admin_id > users.id      // exporta
+
+// =====================================================================
+// AGRUPAMENTOS VISUAIS
+// =====================================================================
+TableGroup "1 - Usuarios, Perfil e Acesso" {
+  users
+  profiles
+  addresses
+  password_reset_tokens
+  refresh_tokens
+  achievements
+  user_achievements
+  subscriptions
+}
+
+TableGroup "2 - Catalogo Global" {
+  categories
+  rarities
+  languages
+  card_conditions
+  albums
+  cards
+  card_photos
+  price_history
+}
+
+TableGroup "3 - Colecao do Cliente" {
+  collections
+  user_albums
+  collection_cards
+}
+
+TableGroup "4 - Comunidade (Grupos)" {
+  groups
+  group_members
+  group_join_requests
+  group_messages
+  polls
+  poll_options
+  poll_votes
+}
+
+TableGroup "5 - Chat Pessoal" {
+  conversations
+  conversation_participants
+  messages
+  user_blocks
+}
+
+TableGroup "6 - Marketplace" {
+  listings
+  listing_photos
+  offers
+  orders
+  payments
+  reviews
+}
+
+TableGroup "7 - Notificacoes e Favoritos" {
+  favorites
+  price_alerts
+  notifications
+  global_notifications
+}
+
+TableGroup "8 - Moderacao e Administracao" {
+  reports
+  catalog_requests
+  audit_logs
+  global_settings
+  seller_verifications
+  seller_documents
+  seller_verification_notes
+  user_warnings
+  catalog_request_votes
+  report_exports
+}
